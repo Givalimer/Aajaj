@@ -3,7 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#111111">
+    android:background="#0A0A10">
 
     <com.givalimer.aajaj.SandboxView
         android:id="@+id/sandboxView"
@@ -11,57 +11,44 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:gravity="center_vertical"
+        android:background="#15151C">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/brush_label"
+            android:textColor="#E0E0E0"
+            android:layout_marginEnd="8dp" />
+
+        <SeekBar
+            android:id="@+id/brushSlider"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#1c1c1c"
-        android:scrollbars="none">
+        android:background="#15151C"
+        android:scrollbars="none"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="10dp">
 
         <LinearLayout
+            android:id="@+id/paletteRow"
             android:orientation="horizontal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp">
-
-            <Button
-                android:id="@+id/btnSand"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_sand" />
-
-            <Button
-                android:id="@+id/btnWater"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_water" />
-
-            <Button
-                android:id="@+id/btnStone"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_stone" />
-
-            <Button
-                android:id="@+id/btnErase"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_erase" />
-
-            <Button
-                android:id="@+id/btnClear"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFAAAA"
-                android:text="@string/action_clear" />
-        </LinearLayout>
+            android:layout_height="wrap_content" />
     </HorizontalScrollView>
 </LinearLayout>

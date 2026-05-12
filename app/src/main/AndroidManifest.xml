@@ -3,7 +3,9 @@
 
     <application
         android:allowBackup="true"
-        android:label="Aajaj Sandbox"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.Aajaj"
         android:supportsRtl="true">
         <activity

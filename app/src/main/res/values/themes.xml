@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Aajaj" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:statusBarColor">#111111</item>
-        <item name="android:windowBackground">#111111</item>
+    <style name="Theme.Aajaj" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+        <item name="android:statusBarColor">#0A0A10</item>
+        <item name="android:navigationBarColor">#0A0A10</item>
+        <item name="android:windowBackground">#0A0A10</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 </resources>
