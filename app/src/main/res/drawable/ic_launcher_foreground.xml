@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground: a glass test tube with four alchemical droplets
+  (sand, fire, water, acid) sitting above it. Drawn in viewport 108x108 dp;
+  the outer ring is the safe zone reserved by the OS for shape masking.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- test tube body (glass) -->
+    <path
+        android:fillColor="#E6FFFFFF"
+        android:pathData="M44,30 L64,30 L64,78 Q64,88 54,88 Q44,88 44,78 Z"
+        android:fillAlpha="0.15" />
+
+    <!-- liquid inside tube: gradient-ish via two stacked shapes -->
+    <path
+        android:fillColor="#FF3AA0FF"
+        android:pathData="M46,60 L62,60 L62,78 Q62,86 54,86 Q46,86 46,78 Z" />
+
+    <path
+        android:fillColor="#FFFF7830"
+        android:pathData="M46,50 L62,50 L62,62 L46,62 Z"
+        android:fillAlpha="0.9" />
+
+    <!-- tube rim (slightly wider) -->
+    <path
+        android:fillColor="#FFE0E0E0"
+        android:pathData="M42,27 L66,27 L66,33 L42,33 Z" />
+
+    <!-- Droplets above the tube: sand, fire, water, acid -->
+    <!-- sand (yellow) -->
+    <path
+        android:fillColor="#FFE0C068"
+        android:pathData="M32,22 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <!-- fire (orange/red) -->
+    <path
+        android:fillColor="#FFFF5020"
+        android:pathData="M48,15 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+    <!-- water (blue) -->
+    <path
+        android:fillColor="#FF3A80E0"
+        android:pathData="M64,18 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <!-- acid (green) -->
+    <path
+        android:fillColor="#FF7CFC00"
+        android:pathData="M78,24 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+
+    <!-- small bubble inside tube -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M52,70 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0"
+        android:fillAlpha="0.6" />
+
+    <!-- decorative sparkle -->
+    <path
+        android:fillColor="#FFFFEA80"
+        android:pathData="M86,42 l1.5,3 l3,1.5 l-3,1.5 l-1.5,3 l-1.5,-3 l-3,-1.5 l3,-1.5 z"
+        android:fillAlpha="0.9" />
+</vector>
