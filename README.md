@@ -1,4 +1,4 @@
-# Aajaj Sandbox
+# Game Sandbox
 
 Простая Android-игра-песочница в стиле *falling sand*.
 
