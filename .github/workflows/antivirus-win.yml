@@ -1,0 +1,63 @@
+name: antivirus-win
+
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - "antivirus-win/**"
+      - ".github/workflows/antivirus-win.yml"
+  pull_request:
+    paths:
+      - "antivirus-win/**"
+      - ".github/workflows/antivirus-win.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build AajajDefender.exe (MSVC)
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure (CMake, Ninja, MSVC)
+        working-directory: antivirus-win
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: antivirus-win
+        run: cmake --build build --config Release --parallel
+
+      - name: Show build output
+        working-directory: antivirus-win
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse build | Where-Object { $_.Extension -eq ".exe" } | ForEach-Object { "$($_.FullName)  ($([math]::Round($_.Length/1KB)) KB)" }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AajajDefender-windows-x64
+          path: antivirus-win/build/AajajDefender.exe
+          if-no-files-found: error
+
+  release:
+    name: Attach .exe to release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: AajajDefender-windows-x64
+          path: ./artifact
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifact/AajajDefender.exe
