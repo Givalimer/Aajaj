@@ -1,0 +1,29 @@
+#include <windows.h>
+
+1 VERSIONINFO
+FILEVERSION    1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEOS         VOS_NT_WINDOWS32
+FILETYPE       VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "Givalimer Cyber Unsecurity Labs"
+            VALUE "FileDescription",  "Aajaj Defender 2026 Ultra"
+            VALUE "FileVersion",      "1.0.0.0"
+            VALUE "InternalName",     "AajajDefender"
+            VALUE "OriginalFilename", "AajajDefender.exe"
+            VALUE "ProductName",      "Aajaj Defender"
+            VALUE "ProductVersion",   "1.0.0.0"
+            VALUE "LegalCopyright",   "(c) 2026 Givalimer. Meme-only. Not a real antivirus."
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+1 24 "app.manifest"
