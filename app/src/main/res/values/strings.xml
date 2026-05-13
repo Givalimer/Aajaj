@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Aajaj Sandbox</string>
-    <string name="tool_sand">Песок</string>
-    <string name="tool_water">Вода</string>
-    <string name="tool_stone">Камень</string>
-    <string name="tool_erase">Стёрка</string>
-    <string name="action_clear">Очистить</string>
+    <string name="app_name">Aajaj DOOM</string>
 </resources>
