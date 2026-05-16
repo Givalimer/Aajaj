@@ -3,6 +3,7 @@ package com.givalimer.aajaj
 import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
@@ -20,13 +21,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
-import coil.load
-import coil.request.CachePolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var actionButtons: LinearLayout
     private lateinit var btnGenerate: TextView
 
-    private var currentImageUrl: String? = null
+    private var currentBitmap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,31 +100,46 @@ class MainActivity : AppCompatActivity() {
 
         val encodedPrompt = URLEncoder.encode(prompt, "UTF-8")
         val imageUrl = "https://image.pollinations.ai/prompt/$encodedPrompt?width=1024&height=1024&nologo=true&seed=${System.currentTimeMillis()}"
-        currentImageUrl = imageUrl
 
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
-                imgResult.load(imageUrl) {
-                    memoryCachePolicy(CachePolicy.DISABLED)
-                    diskCachePolicy(CachePolicy.DISABLED)
-                    listener(
-                        onSuccess = { _, _ ->
+                val url = URL(imageUrl)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.connectTimeout = 120_000  // 2 минуты на подключение
+                connection.readTimeout = 120_000     // 2 минуты на чтение
+                connection.instanceFollowRedirects = true
+                connection.requestMethod = "GET"
+
+                val responseCode = connection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val bitmap = BitmapFactory.decodeStream(connection.inputStream)
+                    connection.disconnect()
+
+                    if (bitmap != null) {
+                        currentBitmap = bitmap
+                        withContext(Dispatchers.Main) {
+                            imgResult.setImageBitmap(bitmap)
                             showLoading(false)
                             showImage(true)
-                        },
-                        onError = { _, _ ->
-                            showLoading(false)
-                            Toast.makeText(
-                                this@MainActivity,
-                                getString(R.string.error_network),
-                                Toast.LENGTH_LONG
-                            ).show()
                         }
-                    )
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            showLoading(false)
+                            Toast.makeText(this@MainActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } else {
+                    connection.disconnect()
+                    withContext(Dispatchers.Main) {
+                        showLoading(false)
+                        Toast.makeText(this@MainActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+                    }
                 }
             } catch (e: Exception) {
-                showLoading(false)
-                Toast.makeText(this@MainActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(this@MainActivity, "${getString(R.string.error_network)}\n${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -219,8 +235,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getBitmapFromImageView(): Bitmap? {
-        val drawable = imgResult.drawable ?: return null
-        return (drawable as? BitmapDrawable)?.bitmap
+        return currentBitmap
     }
 
     private fun shakeView(view: View) {
