@@ -6,7 +6,7 @@ import kotlin.math.floor
 class World {
 
     companion object {
-        const val RENDER_DISTANCE = 3 // chunks
+        const val RENDER_DISTANCE = 2 // chunks (small for mobile)
         const val SEA_LEVEL = 32
     }
 
