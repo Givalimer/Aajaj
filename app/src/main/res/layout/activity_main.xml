@@ -109,12 +109,22 @@
                             android:indeterminateTint="@color/purple_primary" />
 
                         <TextView
+                            android:id="@+id/tvLoadingStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/generating"
                             android:textColor="@color/white_70"
                             android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvTimer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="⏱ 0 сек"
+                            android:textColor="@color/white_50"
+                            android:textSize="13sp" />
 
                     </LinearLayout>
 

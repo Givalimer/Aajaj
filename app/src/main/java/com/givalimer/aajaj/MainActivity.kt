@@ -22,13 +22,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.URLEncoder
+import java.net.UnknownHostException
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,8 +42,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var loadingOverlay: FrameLayout
     private lateinit var actionButtons: LinearLayout
     private lateinit var btnGenerate: TextView
+    private lateinit var tvLoadingStatus: TextView
+    private lateinit var tvTimer: TextView
 
     private var currentBitmap: Bitmap? = null
+    private var timerJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +64,8 @@ class MainActivity : AppCompatActivity() {
         loadingOverlay = findViewById(R.id.loadingOverlay)
         actionButtons = findViewById(R.id.actionButtons)
         btnGenerate = findViewById(R.id.btnGenerate)
+        tvLoadingStatus = findViewById(R.id.tvLoadingStatus)
+        tvTimer = findViewById(R.id.tvTimer)
     }
 
     private fun setupClickListeners() {
@@ -95,8 +104,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun startTimer() {
+        var seconds = 0
+        timerJob?.cancel()
+        timerJob = lifecycleScope.launch {
+            while (true) {
+                tvTimer.text = "⏱ $seconds сек"
+                when {
+                    seconds < 10 -> tvLoadingStatus.text = "Отправляю запрос нейросети..."
+                    seconds < 30 -> tvLoadingStatus.text = "Нейросеть рисует изображение..."
+                    seconds < 60 -> tvLoadingStatus.text = "Почти готово, ещё немного..."
+                    seconds < 90 -> tvLoadingStatus.text = "Сложный запрос, подождите..."
+                    else -> tvLoadingStatus.text = "Долгая генерация, ждём ответ..."
+                }
+                delay(1000)
+                seconds++
+            }
+        }
+    }
+
+    private fun stopTimer() {
+        timerJob?.cancel()
+        timerJob = null
+    }
+
     private fun generateImage(prompt: String) {
         showLoading(true)
+        startTimer()
 
         val encodedPrompt = URLEncoder.encode(prompt, "UTF-8")
         val imageUrl = "https://image.pollinations.ai/prompt/$encodedPrompt?width=1024&height=1024&nologo=true&seed=${System.currentTimeMillis()}"
@@ -105,42 +139,92 @@ class MainActivity : AppCompatActivity() {
             try {
                 val url = URL(imageUrl)
                 val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 120_000  // 2 минуты на подключение
-                connection.readTimeout = 120_000     // 2 минуты на чтение
+                connection.connectTimeout = 120_000
+                connection.readTimeout = 120_000
                 connection.instanceFollowRedirects = true
                 connection.requestMethod = "GET"
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0")
 
                 val responseCode = connection.responseCode
+
                 if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val contentType = connection.contentType ?: ""
+
+                    if (!contentType.startsWith("image")) {
+                        // Сервер вернул не картинку
+                        val errorBody = connection.inputStream.bufferedReader().readText()
+                        connection.disconnect()
+                        withContext(Dispatchers.Main) {
+                            stopTimer()
+                            showLoading(false)
+                            showError("Сервер вернул не картинку!\nТип: $contentType\nОтвет: ${errorBody.take(200)}")
+                        }
+                        return@launch
+                    }
+
                     val bitmap = BitmapFactory.decodeStream(connection.inputStream)
                     connection.disconnect()
 
                     if (bitmap != null) {
                         currentBitmap = bitmap
                         withContext(Dispatchers.Main) {
+                            stopTimer()
                             imgResult.setImageBitmap(bitmap)
                             showLoading(false)
                             showImage(true)
                         }
                     } else {
                         withContext(Dispatchers.Main) {
+                            stopTimer()
                             showLoading(false)
-                            Toast.makeText(this@MainActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+                            showError("Ошибка: не удалось декодировать изображение.\nВозможно сервер вернул пустой ответ.")
                         }
                     }
                 } else {
+                    val errorBody = try {
+                        connection.errorStream?.bufferedReader()?.readText() ?: "нет данных"
+                    } catch (e: Exception) { "не удалось прочитать" }
                     connection.disconnect()
                     withContext(Dispatchers.Main) {
+                        stopTimer()
                         showLoading(false)
-                        Toast.makeText(this@MainActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+                        showError("Ошибка сервера: HTTP $responseCode\n$errorBody")
                     }
+                }
+            } catch (e: SocketTimeoutException) {
+                withContext(Dispatchers.Main) {
+                    stopTimer()
+                    showLoading(false)
+                    showError("⏰ Таймаут! Сервер не ответил за 2 минуты.\nПопробуйте короче описание или повторите позже.")
+                }
+            } catch (e: UnknownHostException) {
+                withContext(Dispatchers.Main) {
+                    stopTimer()
+                    showLoading(false)
+                    showError("❌ Нет интернета!\nПроверьте подключение к сети.\n\n${e.message}")
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    stopTimer()
                     showLoading(false)
-                    Toast.makeText(this@MainActivity, "${getString(R.string.error_network)}\n${e.message}", Toast.LENGTH_LONG).show()
+                    showError("❌ Ошибка: ${e.javaClass.simpleName}\n${e.message}\n\nПопробуйте ещё раз.")
                 }
             }
+        }
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        // Также показываем в статусе загрузки на 5 секунд
+        tvLoadingStatus.text = message
+        tvLoadingStatus.setTextColor(0xFFFF6B6B.toInt())
+        loadingOverlay.visibility = View.VISIBLE
+        tvTimer.text = "Нажмите 'Создать' чтобы попробовать снова"
+
+        lifecycleScope.launch {
+            delay(5000)
+            loadingOverlay.visibility = View.GONE
+            tvLoadingStatus.setTextColor(0xB3FFFFFF.toInt())
         }
     }
 
@@ -148,6 +232,9 @@ class MainActivity : AppCompatActivity() {
         loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
         btnGenerate.isEnabled = !show
         btnGenerate.alpha = if (show) 0.6f else 1.0f
+        if (show) {
+            tvLoadingStatus.setTextColor(0xB3FFFFFF.toInt())
+        }
     }
 
     private fun showImage(show: Boolean) {
@@ -164,7 +251,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveImage() {
-        val bitmap = getBitmapFromImageView() ?: return
+        val bitmap = currentBitmap ?: return
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -201,7 +288,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shareImage() {
-        val bitmap = getBitmapFromImageView() ?: return
+        val bitmap = currentBitmap ?: return
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -232,10 +319,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun getBitmapFromImageView(): Bitmap? {
-        return currentBitmap
     }
 
     private fun shakeView(view: View) {
