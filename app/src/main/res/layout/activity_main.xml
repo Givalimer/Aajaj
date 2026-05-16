@@ -1,67 +1,278 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#111111">
+    android:fillViewport="true"
+    android:scrollbars="none">
 
-    <com.givalimer.aajaj.SandboxView
-        android:id="@+id/sandboxView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <HorizontalScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#1c1c1c"
-        android:scrollbars="none">
+        android:orientation="vertical"
+        android:padding="20dp">
 
+        <!-- Header -->
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✨ AI Art Generator"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/welcome_subtitle"
+                android:textColor="@color/white_70"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:paddingHorizontal="16dp" />
+
+        </LinearLayout>
+
+        <!-- Image Display Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardImage"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="@color/dark_card">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <!-- Placeholder when no image -->
+                <LinearLayout
+                    android:id="@+id/placeholderLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎨"
+                        android:textSize="56sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Ваше изображение появится здесь"
+                        android:textColor="@color/white_50"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <!-- Generated Image -->
+                <ImageView
+                    android:id="@+id/imgResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <!-- Loading overlay -->
+                <FrameLayout
+                    android:id="@+id/loadingOverlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#CC1A1A2E"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ProgressBar
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:indeterminateTint="@color/purple_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/generating"
+                            android:textColor="@color/white_70"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+            </FrameLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Action buttons for image -->
+        <LinearLayout
+            android:id="@+id/actionButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/btnSave"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_action_button"
+                android:gravity="center"
+                android:text="💾 Сохранить"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/btnShare"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_action_button"
+                android:gravity="center"
+                android:text="📤 Поделиться"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <!-- Input Section -->
+        <EditText
+            android:id="@+id/etPrompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_input_field"
+            android:hint="@string/hint_prompt"
+            android:textColorHint="@color/white_50"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:padding="16dp"
+            android:minHeight="80dp"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:maxLines="4" />
+
+        <!-- Quick Prompts -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp">
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="💡 Идеи для вдохновения:"
+            android:textColor="@color/white_70"
+            android:textSize="13sp" />
 
-            <Button
-                android:id="@+id/btnSand"
-                style="?android:attr/buttonBarButtonStyle"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_sand" />
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnWater"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_water" />
+                <TextView
+                    android:id="@+id/chip1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="🌌 Космический пейзаж"
+                    android:textColor="@color/white_70"
+                    android:textSize="12sp" />
 
-            <Button
-                android:id="@+id/btnStone"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_stone" />
+                <TextView
+                    android:id="@+id/chip2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="🐉 Дракон в горах"
+                    android:textColor="@color/white_70"
+                    android:textSize="12sp" />
 
-            <Button
-                android:id="@+id/btnErase"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text="@string/tool_erase" />
+                <TextView
+                    android:id="@+id/chip3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="🏙️ Город будущего"
+                    android:textColor="@color/white_70"
+                    android:textSize="12sp" />
 
-            <Button
-                android:id="@+id/btnClear"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFAAAA"
-                android:text="@string/action_clear" />
-        </LinearLayout>
-    </HorizontalScrollView>
-</LinearLayout>
+                <TextView
+                    android:id="@+id/chip4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="🌸 Японский сад"
+                    android:textColor="@color/white_70"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/chip5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:text="🎭 Сюрреализм"
+                    android:textColor="@color/white_70"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <!-- Generate Button -->
+        <TextView
+            android:id="@+id/btnGenerate"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_button_generate"
+            android:gravity="center"
+            android:text="@string/btn_generate"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:elevation="4dp"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+
+</ScrollView>
