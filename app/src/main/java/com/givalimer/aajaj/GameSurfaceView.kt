@@ -18,6 +18,7 @@ class GameSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!renderer.world.isReady) return true
         inputHandler.handleTouch(event, width, height)
         renderer.world.player.apply {
             moveX = inputHandler.moveX

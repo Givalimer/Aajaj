@@ -61,7 +61,11 @@ class GameRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
         shaderProgram = createProgram(vertexShaderCode, fragmentShaderCode)
         TextureManager.loadTextures(context)
-        world.generate()
+
+        // Generate world on background thread to avoid crash
+        Thread {
+            world.generate()
+        }.start()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -77,10 +81,13 @@ class GameRenderer(private val context: Context) : GLSurfaceView.Renderer {
         val dt = ((now - lastTime) / 1_000_000_000.0).toFloat().coerceAtMost(0.05f)
         lastTime = now
 
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+
+        // Don't render until world is ready
+        if (!world.isReady) return
+
         // Update player
         world.player.update(dt, world)
-
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         GLES20.glUseProgram(shaderProgram)
 
         // Camera

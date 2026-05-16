@@ -6,13 +6,14 @@ import kotlin.math.floor
 class World {
 
     companion object {
-        const val RENDER_DISTANCE = 4 // chunks
+        const val RENDER_DISTANCE = 3 // chunks
         const val SEA_LEVEL = 32
     }
 
     val player = Player()
     private val chunks = mutableMapOf<Long, Chunk>()
     private val noise = SimplexNoise(seed = 12345L)
+    @Volatile var isReady = false
 
     fun generate() {
         // Generate initial chunks around spawn
@@ -21,14 +22,14 @@ class World {
                 getOrCreateChunk(cx, cz)
             }
         }
-        // Build meshes
-        rebuildAllMeshes()
 
         // Place player on surface
         val spawnY = getHeightAt(0, 0) + 2
         player.x = 0.5f
         player.y = spawnY.toFloat()
         player.z = 0.5f
+
+        isReady = true
     }
 
     fun getOrCreateChunk(cx: Int, cz: Int): Chunk {
