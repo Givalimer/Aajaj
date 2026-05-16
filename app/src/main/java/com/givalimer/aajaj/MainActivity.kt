@@ -4,12 +4,12 @@ import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.Gravity
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.EditText
@@ -44,9 +44,41 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnGenerate: TextView
     private lateinit var tvLoadingStatus: TextView
     private lateinit var tvTimer: TextView
+    private lateinit var tabImage: TextView
+    private lateinit var tabVideo: TextView
+    private lateinit var modelChipsContainer: LinearLayout
+    private lateinit var durationContainer: LinearLayout
+    private lateinit var tvDuration: TextView
+    private lateinit var tvPlaceholderEmoji: TextView
+    private lateinit var tvPlaceholderText: TextView
 
     private var currentBitmap: Bitmap? = null
+    private var currentVideoFile: File? = null
     private var timerJob: Job? = null
+    private var isVideoMode = false
+    private var videoDuration = 5
+
+    // Models
+    data class ModelInfo(val id: String, val name: String, val description: String)
+
+    private val imageModels = listOf(
+        ModelInfo("flux", "Flux", "Быстрая генерация"),
+        ModelInfo("zimage", "Z-Image", "Turbo + Апскейл 2x"),
+        ModelInfo("gptimage", "GPT Image", "OpenAI качество"),
+        ModelInfo("klein", "Flux Klein", "Быстрая 4B"),
+        ModelInfo("seedream", "Seedream", "Фотореализм")
+    )
+
+    private val videoModels = listOf(
+        ModelInfo("ltx-2", "LTX-2", "Быстрое видео"),
+        ModelInfo("nova-reel", "Nova Reel", "До 120 сек"),
+        ModelInfo("wan-fast", "Wan Fast", "Быстрое 480P"),
+        ModelInfo("wan", "Wan 2.6", "До 1080P + звук"),
+        ModelInfo("seedance", "Seedance", "Высокое качество")
+    )
+
+    private var selectedImageModel = "flux"
+    private var selectedVideoModel = "ltx-2"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +87,9 @@ class MainActivity : AppCompatActivity() {
         initViews()
         setupClickListeners()
         setupChips()
+        setupTabs()
+        setupDuration()
+        populateModelChips(imageModels, selectedImageModel)
     }
 
     private fun initViews() {
@@ -66,6 +101,113 @@ class MainActivity : AppCompatActivity() {
         btnGenerate = findViewById(R.id.btnGenerate)
         tvLoadingStatus = findViewById(R.id.tvLoadingStatus)
         tvTimer = findViewById(R.id.tvTimer)
+        tabImage = findViewById(R.id.tabImage)
+        tabVideo = findViewById(R.id.tabVideo)
+        modelChipsContainer = findViewById(R.id.modelChipsContainer)
+        durationContainer = findViewById(R.id.durationContainer)
+        tvDuration = findViewById(R.id.tvDuration)
+        tvPlaceholderEmoji = findViewById(R.id.tvPlaceholderEmoji)
+        tvPlaceholderText = findViewById(R.id.tvPlaceholderText)
+    }
+
+    private fun setupTabs() {
+        tabImage.setOnClickListener { switchToImageMode() }
+        tabVideo.setOnClickListener { switchToVideoMode() }
+    }
+
+    private fun switchToImageMode() {
+        isVideoMode = false
+        tabImage.setBackgroundResource(R.drawable.bg_tab_active)
+        tabImage.setTextColor(0xFFFFFFFF.toInt())
+        tabImage.setTypeface(null, android.graphics.Typeface.BOLD)
+        tabVideo.setBackgroundResource(R.drawable.bg_tab_inactive)
+        tabVideo.setTextColor(0x80FFFFFF.toInt())
+        tabVideo.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+        durationContainer.visibility = View.GONE
+        tvPlaceholderEmoji.text = "🎨"
+        tvPlaceholderText.text = "Ваше изображение появится здесь"
+        btnGenerate.text = "✨ Создать изображение"
+        populateModelChips(imageModels, selectedImageModel)
+    }
+
+    private fun switchToVideoMode() {
+        isVideoMode = true
+        tabVideo.setBackgroundResource(R.drawable.bg_tab_active)
+        tabVideo.setTextColor(0xFFFFFFFF.toInt())
+        tabVideo.setTypeface(null, android.graphics.Typeface.BOLD)
+        tabImage.setBackgroundResource(R.drawable.bg_tab_inactive)
+        tabImage.setTextColor(0x80FFFFFF.toInt())
+        tabImage.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+        durationContainer.visibility = View.VISIBLE
+        tvPlaceholderEmoji.text = "🎬"
+        tvPlaceholderText.text = "Ваше видео появится здесь"
+        btnGenerate.text = "🎬 Создать видео"
+        populateModelChips(videoModels, selectedVideoModel)
+    }
+
+    private fun setupDuration() {
+        updateDurationText()
+        findViewById<TextView>(R.id.btnDurationMinus).setOnClickListener {
+            if (videoDuration > 1) {
+                videoDuration--
+                updateDurationText()
+            }
+        }
+        findViewById<TextView>(R.id.btnDurationPlus).setOnClickListener {
+            if (videoDuration < 10) {
+                videoDuration++
+                updateDurationText()
+            }
+        }
+    }
+
+    private fun updateDurationText() {
+        tvDuration.text = "$videoDuration сек"
+    }
+
+    private fun populateModelChips(models: List<ModelInfo>, selectedId: String) {
+        modelChipsContainer.removeAllViews()
+        for (model in models) {
+            val chip = TextView(this).apply {
+                text = model.name
+                textSize = 13f
+                setPadding(dpToPx(14), dpToPx(8), dpToPx(14), dpToPx(8))
+                gravity = Gravity.CENTER
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    dpToPx(36)
+                )
+                params.marginEnd = dpToPx(8)
+                layoutParams = params
+
+                if (model.id == selectedId) {
+                    setBackgroundResource(R.drawable.bg_model_chip_active)
+                    setTextColor(0xFFFFFFFF.toInt())
+                } else {
+                    setBackgroundResource(R.drawable.bg_model_chip_inactive)
+                    setTextColor(0xB3FFFFFF.toInt())
+                }
+
+                setOnClickListener {
+                    if (isVideoMode) {
+                        selectedVideoModel = model.id
+                        populateModelChips(videoModels, selectedVideoModel)
+                    } else {
+                        selectedImageModel = model.id
+                        populateModelChips(imageModels, selectedImageModel)
+                    }
+                    Toast.makeText(this@MainActivity, "${model.name}: ${model.description}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            modelChipsContainer.addView(chip)
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun setupClickListeners() {
@@ -76,28 +218,40 @@ class MainActivity : AppCompatActivity() {
                 shakeView(etPrompt)
                 return@setOnClickListener
             }
-            generateImage(prompt)
+            if (isVideoMode) {
+                generateVideo(prompt)
+            } else {
+                generateImage(prompt)
+            }
         }
 
         findViewById<TextView>(R.id.btnSave).setOnClickListener {
-            saveImage()
+            if (isVideoMode) {
+                saveVideo()
+            } else {
+                saveImage()
+            }
         }
 
         findViewById<TextView>(R.id.btnShare).setOnClickListener {
-            shareImage()
+            if (isVideoMode) {
+                shareVideo()
+            } else {
+                shareImage()
+            }
         }
     }
 
     private fun setupChips() {
-        val chips = mapOf(
+        val imageChips = mapOf(
             R.id.chip1 to "A beautiful cosmic landscape with nebulas, stars and planets, ultra detailed, 8k",
-            R.id.chip2 to "A majestic dragon sitting on top of misty mountains, fantasy art, cinematic lighting, detailed scales",
-            R.id.chip3 to "A futuristic cyberpunk city at night with neon lights, flying cars, rain reflections, ultra detailed",
+            R.id.chip2 to "A majestic dragon sitting on top of misty mountains, fantasy art, cinematic lighting",
+            R.id.chip3 to "A futuristic cyberpunk city at night with neon lights, flying cars, rain reflections",
             R.id.chip4 to "A peaceful Japanese garden with cherry blossoms, koi pond, wooden bridge, soft morning light",
-            R.id.chip5 to "A surreal dreamscape painting with melting clocks, floating islands, impossible geometry, vibrant colors"
+            R.id.chip5 to "A surreal dreamscape painting with melting clocks, floating islands, impossible geometry"
         )
 
-        chips.forEach { (id, prompt) ->
+        imageChips.forEach { (id, prompt) ->
             findViewById<TextView>(id).setOnClickListener {
                 etPrompt.setText(prompt)
             }
@@ -111,10 +265,10 @@ class MainActivity : AppCompatActivity() {
             while (true) {
                 tvTimer.text = "⏱ $seconds сек"
                 when {
-                    seconds < 10 -> tvLoadingStatus.text = "Отправляю запрос нейросети..."
-                    seconds < 30 -> tvLoadingStatus.text = "Нейросеть рисует изображение..."
-                    seconds < 60 -> tvLoadingStatus.text = "Почти готово, ещё немного..."
-                    seconds < 90 -> tvLoadingStatus.text = "Сложный запрос, подождите..."
+                    seconds < 10 -> tvLoadingStatus.text = if (isVideoMode) "Отправляю запрос на видео..." else "Отправляю запрос нейросети..."
+                    seconds < 30 -> tvLoadingStatus.text = if (isVideoMode) "Рендерю видео, это займёт время..." else "Нейросеть рисует изображение..."
+                    seconds < 60 -> tvLoadingStatus.text = if (isVideoMode) "Видео генерируется..." else "Почти готово, ещё немного..."
+                    seconds < 120 -> tvLoadingStatus.text = if (isVideoMode) "Сложное видео, подождите..." else "Сложный запрос, подождите..."
                     else -> tvLoadingStatus.text = "Долгая генерация, ждём ответ..."
                 }
                 delay(1000)
@@ -128,19 +282,21 @@ class MainActivity : AppCompatActivity() {
         timerJob = null
     }
 
+    // =================== IMAGE GENERATION ===================
+
     private fun generateImage(prompt: String) {
         showLoading(true)
         startTimer()
 
         val encodedPrompt = URLEncoder.encode(prompt, "UTF-8")
-        val imageUrl = "https://image.pollinations.ai/prompt/$encodedPrompt?width=1024&height=1024&nologo=true&seed=${System.currentTimeMillis()}"
+        val imageUrl = "https://image.pollinations.ai/prompt/$encodedPrompt?model=$selectedImageModel&width=1024&height=1024&nologo=true&seed=${System.currentTimeMillis()}"
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val url = URL(imageUrl)
                 val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 120_000
-                connection.readTimeout = 120_000
+                connection.connectTimeout = 180_000
+                connection.readTimeout = 180_000
                 connection.instanceFollowRedirects = true
                 connection.requestMethod = "GET"
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0")
@@ -149,15 +305,13 @@ class MainActivity : AppCompatActivity() {
 
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     val contentType = connection.contentType ?: ""
-
                     if (!contentType.startsWith("image")) {
-                        // Сервер вернул не картинку
                         val errorBody = connection.inputStream.bufferedReader().readText()
                         connection.disconnect()
                         withContext(Dispatchers.Main) {
                             stopTimer()
                             showLoading(false)
-                            showError("Сервер вернул не картинку!\nТип: $contentType\nОтвет: ${errorBody.take(200)}")
+                            showError("Сервер вернул не картинку!\nТип: $contentType\nМодель: $selectedImageModel\nОтвет: ${errorBody.take(200)}")
                         }
                         return@launch
                     }
@@ -167,17 +321,18 @@ class MainActivity : AppCompatActivity() {
 
                     if (bitmap != null) {
                         currentBitmap = bitmap
+                        currentVideoFile = null
                         withContext(Dispatchers.Main) {
                             stopTimer()
                             imgResult.setImageBitmap(bitmap)
                             showLoading(false)
-                            showImage(true)
+                            showResult(true)
                         }
                     } else {
                         withContext(Dispatchers.Main) {
                             stopTimer()
                             showLoading(false)
-                            showError("Ошибка: не удалось декодировать изображение.\nВозможно сервер вернул пустой ответ.")
+                            showError("Не удалось декодировать изображение.\nМодель: $selectedImageModel")
                         }
                     }
                 } else {
@@ -188,41 +343,134 @@ class MainActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         stopTimer()
                         showLoading(false)
-                        showError("Ошибка сервера: HTTP $responseCode\n$errorBody")
+                        showError("HTTP $responseCode\nМодель: $selectedImageModel\n$errorBody")
                     }
                 }
             } catch (e: SocketTimeoutException) {
                 withContext(Dispatchers.Main) {
                     stopTimer()
                     showLoading(false)
-                    showError("⏰ Таймаут! Сервер не ответил за 2 минуты.\nПопробуйте короче описание или повторите позже.")
+                    showError("⏰ Таймаут! Сервер не ответил за 3 мин.\nМодель: $selectedImageModel")
                 }
             } catch (e: UnknownHostException) {
                 withContext(Dispatchers.Main) {
                     stopTimer()
                     showLoading(false)
-                    showError("❌ Нет интернета!\nПроверьте подключение к сети.\n\n${e.message}")
+                    showError("❌ Нет интернета!\n${e.message}")
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     stopTimer()
                     showLoading(false)
-                    showError("❌ Ошибка: ${e.javaClass.simpleName}\n${e.message}\n\nПопробуйте ещё раз.")
+                    showError("❌ ${e.javaClass.simpleName}\n${e.message}")
                 }
             }
         }
     }
 
+    // =================== VIDEO GENERATION ===================
+
+    private fun generateVideo(prompt: String) {
+        showLoading(true)
+        startTimer()
+
+        val encodedPrompt = URLEncoder.encode(prompt, "UTF-8")
+        val videoUrl = "https://image.pollinations.ai/prompt/$encodedPrompt?model=$selectedVideoModel&width=1280&height=720&duration=$videoDuration&nologo=true&seed=${System.currentTimeMillis()}"
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val url = URL(videoUrl)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.connectTimeout = 300_000  // 5 min for video
+                connection.readTimeout = 300_000
+                connection.instanceFollowRedirects = true
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0")
+
+                val responseCode = connection.responseCode
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val contentType = connection.contentType ?: ""
+
+                    // Save video to cache
+                    val videoFile = File(cacheDir, "generated_video_${System.currentTimeMillis()}.mp4")
+                    connection.inputStream.use { input ->
+                        FileOutputStream(videoFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    connection.disconnect()
+
+                    if (videoFile.length() > 1000) {
+                        currentVideoFile = videoFile
+                        currentBitmap = null
+
+                        // Try to extract first frame as thumbnail
+                        withContext(Dispatchers.Main) {
+                            stopTimer()
+                            showLoading(false)
+
+                            // Show video icon as placeholder since we can't play inline easily
+                            imgResult.setImageResource(android.R.drawable.ic_media_play)
+                            imgResult.scaleType = ImageView.ScaleType.CENTER
+                            showResult(true)
+
+                            Toast.makeText(this@MainActivity, "🎬 Видео создано! (${videoFile.length() / 1024} КБ)\nНажмите 'Поделиться' чтобы посмотреть", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        // File too small - probably an error response
+                        val errorText = videoFile.readText().take(300)
+                        videoFile.delete()
+                        withContext(Dispatchers.Main) {
+                            stopTimer()
+                            showLoading(false)
+                            showError("Сервер вернул пустой ответ.\nМодель: $selectedVideoModel\n$errorText")
+                        }
+                    }
+                } else {
+                    val errorBody = try {
+                        connection.errorStream?.bufferedReader()?.readText() ?: "нет данных"
+                    } catch (e: Exception) { "не удалось прочитать" }
+                    connection.disconnect()
+                    withContext(Dispatchers.Main) {
+                        stopTimer()
+                        showLoading(false)
+                        showError("HTTP $responseCode\nМодель: $selectedVideoModel\n$errorBody")
+                    }
+                }
+            } catch (e: SocketTimeoutException) {
+                withContext(Dispatchers.Main) {
+                    stopTimer()
+                    showLoading(false)
+                    showError("⏰ Таймаут 5 мин!\nВидео генерируется дольше.\nМодель: $selectedVideoModel")
+                }
+            } catch (e: UnknownHostException) {
+                withContext(Dispatchers.Main) {
+                    stopTimer()
+                    showLoading(false)
+                    showError("❌ Нет интернета!\n${e.message}")
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    stopTimer()
+                    showLoading(false)
+                    showError("❌ ${e.javaClass.simpleName}\n${e.message}")
+                }
+            }
+        }
+    }
+
+    // =================== UI HELPERS ===================
+
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        // Также показываем в статусе загрузки на 5 секунд
         tvLoadingStatus.text = message
         tvLoadingStatus.setTextColor(0xFFFF6B6B.toInt())
         loadingOverlay.visibility = View.VISIBLE
-        tvTimer.text = "Нажмите 'Создать' чтобы попробовать снова"
+        tvTimer.text = "Нажмите кнопку чтобы попробовать снова"
 
         lifecycleScope.launch {
-            delay(5000)
+            delay(6000)
             loadingOverlay.visibility = View.GONE
             tvLoadingStatus.setTextColor(0xB3FFFFFF.toInt())
         }
@@ -237,7 +485,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showImage(show: Boolean) {
+    private fun showResult(show: Boolean) {
         imgResult.visibility = if (show) View.VISIBLE else View.GONE
         placeholderLayout.visibility = if (show) View.GONE else View.VISIBLE
         actionButtons.visibility = if (show) View.VISIBLE else View.GONE
@@ -249,6 +497,8 @@ class MainActivity : AppCompatActivity() {
             actionButtons.animate().alpha(1f).setDuration(300).setStartDelay(200).start()
         }
     }
+
+    // =================== SAVE / SHARE ===================
 
     private fun saveImage() {
         val bitmap = currentBitmap ?: return
@@ -277,7 +527,44 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "✅ Изображение сохранено!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Ошибка сохранения: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun saveVideo() {
+        val videoFile = currentVideoFile ?: return
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val values = ContentValues().apply {
+                        put(MediaStore.Video.Media.DISPLAY_NAME, "ai_video_${System.currentTimeMillis()}.mp4")
+                        put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+                        put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/AI Art")
+                    }
+                    val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+                    uri?.let {
+                        contentResolver.openOutputStream(it)?.use { stream ->
+                            videoFile.inputStream().use { input ->
+                                input.copyTo(stream)
+                            }
+                        }
+                    }
+                } else {
+                    val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "AI Art")
+                    if (!dir.exists()) dir.mkdirs()
+                    val dest = File(dir, "ai_video_${System.currentTimeMillis()}.mp4")
+                    videoFile.copyTo(dest, overwrite = true)
+                }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "✅ Видео сохранено!", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -299,11 +586,7 @@ class MainActivity : AppCompatActivity() {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                 }
 
-                val uri = FileProvider.getUriForFile(
-                    this@MainActivity,
-                    "${packageName}.fileprovider",
-                    file
-                )
+                val uri = FileProvider.getUriForFile(this@MainActivity, "${packageName}.fileprovider", file)
 
                 withContext(Dispatchers.Main) {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -311,7 +594,35 @@ class MainActivity : AppCompatActivity() {
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
+                    startActivity(Intent.createChooser(shareIntent, "Поделиться"))
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun shareVideo() {
+        val videoFile = currentVideoFile ?: return
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val cachePath = File(cacheDir, "shared_videos")
+                cachePath.mkdirs()
+                val file = File(cachePath, "ai_video_share.mp4")
+                videoFile.copyTo(file, overwrite = true)
+
+                val uri = FileProvider.getUriForFile(this@MainActivity, "${packageName}.fileprovider", file)
+
+                withContext(Dispatchers.Main) {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "video/mp4"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(shareIntent, "Поделиться видео"))
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

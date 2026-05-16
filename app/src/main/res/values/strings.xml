@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">AI Art Generator</string>
     <string name="hint_prompt">Опишите изображение которое хотите создать…</string>
-    <string name="btn_generate">✨ Создать изображение</string>
+    <string name="btn_generate">✨ Создать</string>
     <string name="generating">Создаю шедевр…</string>
     <string name="welcome_title">AI Art Generator</string>
     <string name="welcome_subtitle">Опишите что вы хотите увидеть и нейросеть создаст для вас уникальное изображение</string>

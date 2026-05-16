@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="dark_bg">#1A1A2E</color>
+    <color name="dark_card">#0F3460</color>
+    <color name="dark_surface">#16213E</color>
+    <color name="gradient_end">#FF4081</color>
+    <color name="gradient_start">#7C4DFF</color>
+    <color name="pink_accent">#FF4081</color>
+    <color name="purple_dark">#651FFF</color>
+    <color name="purple_primary">#7C4DFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_30">#4DFFFFFF</color>
+    <color name="white_50">#80FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
+    <string name="app_name">AI Art Generator</string>
+    <string name="btn_generate">✨ Создать</string>
+    <string name="btn_save">Сохранить</string>
+    <string name="btn_share">Поделиться</string>
+    <string name="error_empty">Пожалуйста, введите описание</string>
+    <string name="error_network">Ошибка сети. Проверьте подключение к интернету</string>
+    <string name="generating">Создаю шедевр…</string>
+    <string name="hint_prompt">Опишите изображение которое хотите создать…</string>
+    <string name="saved">Изображение сохранено!</string>
+    <string name="welcome_subtitle">Опишите что вы хотите увидеть и нейросеть создаст для вас уникальное изображение</string>
+    <string name="welcome_title">AI Art Generator</string>
+    <style name="Theme.AiArt" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#7C4DFF</item>
+        <item name="colorPrimaryVariant">#651FFF</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#FF4081</item>
+        <item name="colorSecondaryVariant">#F50057</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:statusBarColor">#1A1A2E</item>
+        <item name="android:navigationBarColor">#1A1A2E</item>
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
+    </style>
+</resources>
