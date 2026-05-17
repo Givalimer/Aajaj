@@ -75,8 +75,10 @@ class InputHandler {
                         if (Math.abs(dx) > 2f || Math.abs(dy) > 2f) {
                             rightMoved = true
                         }
-                        lookDeltaX += dx * lookSensitivity
-                        lookDeltaY += dy * lookSensitivity
+                        // dx positive = swipe right = turn right (yaw increases)
+                        lookDeltaX -= dx * lookSensitivity
+                        // dy positive = swipe down = look down (pitch increases)  
+                        lookDeltaY -= dy * lookSensitivity
                         rightLastX = x
                         rightLastY = y
                     }

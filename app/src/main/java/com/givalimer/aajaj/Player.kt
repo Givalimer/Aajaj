@@ -69,9 +69,9 @@ class Player {
         val rightX = cos(yawRad)
         val rightZ = sin(yawRad)
 
-        // Move input (moveZ is forward/back, moveX is strafe)
-        val inputX = -moveZ * forwardX + moveX * rightX
-        val inputZ = -moveZ * forwardZ + moveX * rightZ
+        // Move input (moveZ is forward/back from joystick: negative = up = forward)
+        val inputX = moveZ * forwardX + moveX * rightX
+        val inputZ = moveZ * forwardZ + moveX * rightZ
 
         vx = inputX * speed
         vz = inputZ * speed

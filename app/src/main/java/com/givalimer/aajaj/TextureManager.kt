@@ -192,8 +192,18 @@ object TextureManager {
     private fun drawWater(canvas: Canvas, paint: Paint, ox: Int, oy: Int) {
         for (px in 0 until TEX_SIZE) {
             for (py in 0 until TEX_SIZE) {
-                val b = 150 + (Math.random() * 60).toInt()
-                paint.color = Color.argb(180, 30, 60, b)
+                // Realistic water with wave pattern and depth gradient
+                val wave = Math.sin((px + py * 0.5) * 0.8).toFloat() * 15f
+                val depthGradient = (py / TEX_SIZE.toFloat()) * 20f
+                val r = (20 + wave * 0.3f).toInt().coerceIn(10, 40)
+                val g = (60 + wave * 0.5f + depthGradient * 0.3f).toInt().coerceIn(40, 90)
+                val b = (140 + wave + depthGradient).toInt().coerceIn(120, 200)
+                // Lighter highlights on wave peaks
+                val highlight = if (Math.sin((px * 1.2 + py * 0.3)) > 0.7) 30 else 0
+                paint.color = Color.argb(200, 
+                    (r + highlight).coerceAtMost(255), 
+                    (g + highlight).coerceAtMost(255), 
+                    (b + highlight).coerceAtMost(255))
                 canvas.drawPoint((ox + px).toFloat(), (oy + py).toFloat(), paint)
             }
         }
